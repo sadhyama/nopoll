@@ -412,6 +412,7 @@ char * __nopoll_conn_get_client_init (noPollConn * conn, noPollConnOpts * opts)
 	char key[50];
 	int  key_size = 50;
 	char nonce[17];
+	char *reqMsg = NULL;
 
 	/* get the nonce */
 	if (! nopoll_nonce (nonce, 16)) {
@@ -432,7 +433,7 @@ char * __nopoll_conn_get_client_init (noPollConn * conn, noPollConnOpts * opts)
 	conn->handshake->expected_accept = nopoll_strdup (key);
 
 	/* send initial handshake */
-	return nopoll_strdup_printf ("GET %s HTTP/1.1"
+	reqMsg = nopoll_strdup_printf ("GET %s HTTP/1.1"
 				     "\r\nHost: %s"
 				     "\r\nUpgrade: websocket"
 				     "\r\nConnection: Upgrade"
@@ -459,6 +460,9 @@ char * __nopoll_conn_get_client_init (noPollConn * conn, noPollConnOpts * opts)
 				     conn->protocols ? conn->protocols : "",
 				     /* extra arbitrary headers */
 				     (opts && opts->extra_headers) ? opts->extra_headers : "");
+
+	nopoll_log (conn->ctx, NOPOLL_LEVEL_INFO, "reqMsg: %s", reqMsg);
+	return reqMsg;
 }
 
 
