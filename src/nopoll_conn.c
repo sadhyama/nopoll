@@ -2502,6 +2502,7 @@ int         __nopoll_conn_receive  (noPollConn * conn, char  * buffer, int  maxl
 	int         bytes;
 	long        wait_usecs = 500;
 	int         error_num;     
+	int rsrc_unavailable_cnt = 0;
 	if (conn->pending_buf_bytes > 0) {
 		nopoll_log (conn->ctx, NOPOLL_LEVEL_DEBUG, "Calling with bytes we can reuse (%d), requested: %d",
 			    conn->pending_buf_bytes, maxlen);
@@ -2549,6 +2550,11 @@ int         __nopoll_conn_receive  (noPollConn * conn, char  * buffer, int  maxl
                 nopoll_log (conn->ctx, NOPOLL_LEVEL_CRITICAL, " conn receive nread=%d, errno=%d (%s)", nread,error_num, strerror (error_num));
 		if (error_num == NOPOLL_EAGAIN) {
 			__nopoll_receive_delay (&wait_usecs);
+			if (rsrc_unavailable_cnt > 20)
+			{
+                nopoll_log (conn->ctx, NOPOLL_LEVEL_CRITICAL, " Resource unavailable count reached max. (%d)\n", rsrc_unavailable_cnt);
+				return 0;
+			}
 			goto keep_reading;
 			/* return 0; */
 		}
